@@ -1,44 +1,64 @@
-let listaSupermercado = [];
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-function agregarProducto() {
-    let producto = prompt("Ingrese el nombre del producto:");
-    if (producto) {
-        listaSupermercado.push(producto);
-        alert(`"${producto}" fue agregado a la lista.`);
-    } else {
-        alert("Debe ingresar un producto válido.");
+function updateCartDisplay() {
+    const cartItemsElement = document.getElementById('cart-items');
+    
+    cartItemsElement.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItemsElement.innerHTML = '<p>No hay productos en el carrito</p>';
+        return;
     }
+    
+    cart.forEach((item, index) => {
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+            <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+            <div class="cart-item-details">
+                <h4>${item.name}</h4>
+                <p>${item.price}</p>
+                <button class="remove-btn" data-index="${index}">Eliminar</button>
+            </div>
+        `;
+        cartItemsElement.appendChild(cartItem);
+    });
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
-function eliminarProducto() {
-    let producto = prompt("Ingrese el nombre del producto a eliminar:");
-    let index = listaSupermercado.indexOf(producto);
-    if (index !== -1) {
-        listaSupermercado.splice(index, 1);
-        alert(`"${producto}" fue eliminado de la lista.`);
-    } else {
-        alert("El producto no se encuentra en la lista.");
+function addToCart(name, price, image) {
+    const existingItemIndex = cart.findIndex(item => item.name === name);
+    
+    if (existingItemIndex >= 0) {
+        return;
     }
+    
+    cart.push({ name, price, image });
+    
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartDisplay();
 }
 
-function mostrarLista() {
-    if (listaSupermercado.length === 0) {
-        alert("La lista de supermercado está vacía.");
-    } else {
-        alert("Lista de Supermercado:\n" + listaSupermercado.join("\n"));
-    }
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const productos = document.querySelectorAll('.producto');
+    productos.forEach(producto => {
+        producto.addEventListener('click', function() {
+            const name = this.querySelector('h3').textContent;
+            const price = this.querySelector('p').textContent;
+            const image = this.querySelector('img').src;
+            addToCart(name, price, image);
+        });
+    });
+    
+    document.getElementById('cart-items').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            const index = e.target.dataset.index;
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+    });
+    
+    updateCartDisplay();
+});
 
-function menuLista() {
-    let opcion;
-    do {
-        opcion = prompt("Lista de Supermercado\n1 Agregar Producto\n2 Eliminar Producto\n3 Mostrar Lista\n4 Salir\nSeleccione una opción:");
-        if (opcion === "1") agregarProducto();
-        else if (opcion === "2") eliminarProducto();
-        else if (opcion === "3") mostrarLista();
-        else if (opcion !== "4") alert("Opción no válida. Intente de nuevo.");
-    } while (opcion !== "4");
-    alert("Gracias por usar la lista de supermercado.");
-}
-
-menuLista();
